@@ -38,12 +38,17 @@ jobs:
           mes_actual=$(date +%m)
           dia_actual=$(date +%d)
 
-          edad=$((anio_actual - anio)) 
+          fecha_nacimiento=$(date -d "$anio-$mes-$dia" +%s)
+          fecha_hoy=$(date +%s)
 
-          if ["$mes_actual" -lt "$mes"] || {["$mes_actual" -eq "$mes"] && ["$dia_actual" -lt "$dia"];}; then
-          edad=$((edad - 1))
-          fi
-          echo "Años: $edad"
+          dias_totales=$(((fecha_hoy - fecha_nacimiento) / 86400))
+
+          anios=$(( dias_total / 365))
+          meses=$(((dias_total % 365)/30))
+          dias=$(((dias_total % 365)% 30))
+
+          echo "Fecha de nacimiento: $anio-$mes-$dia"
+          echo "Edad aproximada: $anios años, $meses meses, $dias días"
 
   evaluar_resultado:
     name: Clasificación
