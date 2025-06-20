@@ -13,7 +13,7 @@ on:
         description: 'Ingresa el mes de nacimiento'
         required: true
         type: string
-      ano:
+      anio:
         description: 'Ingresa el año de nacimiento'
         required: true
         type: string
@@ -31,9 +31,13 @@ jobs:
       - name: Realizar calculo
         id: suma
         run: |
-          año=${{github.event.inputs.ano}}
-          edad=$((2026 - año))
+          anio=${{ github.event.inputs.anio }}
+          mes=${{ github.event.inputs.mes }}
+          dia=${{ github.event.inputs.mes }}
+          echo "año $anio"
+          edad=$((2026 - anio))
           echo "Años: $edad"
+
   evaluar_resultado:
     name: Clasificación
     needs: sumar_numeros
