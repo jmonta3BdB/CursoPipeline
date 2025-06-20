@@ -37,6 +37,7 @@ jobs:
           echo "año $anio"
           edad=$((2026 - anio))
           echo "Años: $edad"
+          echo "$LIM_NINEZ"
 
   evaluar_resultado:
     name: Clasificación
@@ -45,8 +46,16 @@ jobs:
     steps:
       - name: Mostrar mensaje según resultado
         run: |
-          if [ "${{ needs.sumar_numeros.outputs.resultado }}" -gt 10 ]; then
-            echo "✅ El resultado es mayor a 10"
+          anio=${{ github.event.inputs.anio }}
+          mes=${{ github.event.inputs.mes }}
+          dia=${{ github.event.inputs.mes }}
+
+          if [[ $anio -lt $LIM_NINEZ]; then
+            echo "Etapa: Niñez"
           else
-            echo "⚠️ El resultado es menor o igual a 10"
+            if [[ $variable1 -gt $variable2 ]]; then
+              echo "variable1 es mayor que variable2"
+            else
+              echo "variable1 es menor que variable2"
+            fi
           fi
