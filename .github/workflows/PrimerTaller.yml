@@ -47,15 +47,20 @@ jobs:
       - name: Mostrar mensaje según resultado
         run: |
           anio=${{ github.event.inputs.anio }}
-          mes=${{ github.event.inputs.mes }}
-          dia=${{ github.event.inputs.mes }}
-
           if [[ $anio -lt $LIM_NINEZ]; then
             echo "Etapa: Niñez"
           else
-            if [[ $variable1 -gt $variable2 ]]; then
-              echo "variable1 es mayor que variable2"
+            if [[ $anio -gt $LIM_ADOLESCENCIA ]]; then
+              echo "Etapa Adolescencia"
             else
-              echo "variable1 es menor que variable2"
+              if [[ $anio -gt $LIM_ADULTO_JOVEN ]]; then
+              echo "Etapa Adultos jovenes"
+              else
+                if [[ $anio -gt $LIM_ADULTO ]]; then
+              echo "Etapa Adultos"
+              else
+              echo "Etapa de Vejez"
+                if
+              if
             fi
           fi
