@@ -2,7 +2,7 @@ name: Clasificación de edades
 on:
   push:
     branches:
-      - 'test/*'
+      - 'test1/*'
   workflow_dispatch:
     inputs:
       dia:
@@ -32,7 +32,7 @@ jobs:
         id: suma
         run: |
           año=${{github.event.inputs.ano}}
-          edad=$((año - año)): 2026
+          edad=$((2026 - año))
           echo "Años: $edad"
   evaluar_resultado:
     name: Clasificación
