@@ -1,0 +1,35 @@
+name: Suma de Variables
+
+on:
+  push:
+    branches:
+      - 'test/**'
+
+jobs:
+  sumar_numeros:
+    name: Sumar Números
+    runs-on: ubuntu-latest
+    env:
+      NUM1: ${{ vars.NUM1 }}
+      NUM2: ${{ vars.NUM2 }}
+    steps:
+      - name: Realizar suma
+        id: suma
+        run: |
+          echo "Sumando $NUM1 + $NUM2"
+          resultado=$((NUM1 + NUM2))
+          echo "Resultado: $resultado"
+          echo "resultado=$resultado" >> $GITHUB_OUTPUT
+
+  evaluar_resultado:
+    name: Evaluar Resultado
+    needs: sumar_numeros
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar mensaje según resultado
+        run: |
+          if [ "${{ needs.sumar_numeros.outputs.resultado }}" -gt 10 ]; then
+            echo "✅ El resultado es mayor a 10"
+          else
+            echo "⚠️ El resultado es menor o igual a 10"
+          fi
