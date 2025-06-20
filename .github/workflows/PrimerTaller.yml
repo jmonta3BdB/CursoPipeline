@@ -27,9 +27,11 @@ jobs:
   sumar_numeros:
     name: Calculo Edad
     runs-on: ubuntu-latest
+    outputs:
+      edad: ${{ steps.edad.outputs.anios}}
     steps:
       - name: Realizar calculo
-        id: suma
+        id: edad
         run: |
           anio=${{ github.event.inputs.anio }}
           mes=${{ github.event.inputs.mes }}
@@ -45,7 +47,7 @@ jobs:
 
           dias_totales=$(( (fecha_hoy - fecha_nacimiento) / 86400))
 
-          anios=$(( dias_totales / 365))
+          anios=$(( dias_totales / 365)) >> $GITHUB_OUTPUT
           meses=$(( (dias_totales % 365) / 30 ))
           dias=$(( (dias_totales % 365) % 30 ))
 
@@ -59,7 +61,7 @@ jobs:
     steps:
       - name: Mostrar mensaje según resultado
         run: |
-          anio=${{ github.event.inputs.anio }}
+          edad=${{ needs.sumar_numeros.outputs.edad }}
           if [ "$anio" -lt "$LIM_NINEZ" ]; then
             echo "edad $anio y limite $LIM_NINEZ"
             echo "Etapa: Niñez"
