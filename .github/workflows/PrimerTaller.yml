@@ -1,4 +1,5 @@
 name: Clasificación de edades
+
 on:
   push:
     branches:
@@ -17,42 +18,38 @@ on:
         description: 'Ingresa el año de nacimiento'
         required: true
         type: string
+
 env:
-      LIM_NINEZ: ${{ vars.LIM_NINEZ }}
-      LIM_ADOLESCENCIA: ${{ vars.LIM_ADOLESCENCIA }}
-      LIM_ADULTO_JOVEN: ${{ vars.LIM_ADULTO_JOVEN }}
-      LIM_ADULTO: ${{ vars.LIM_ADULTO }}
+  LIM_NINEZ: ${{ vars.LIM_NINEZ }}
+  LIM_ADOLESCENCIA: ${{ vars.LIM_ADOLESCENCIA }}
+  LIM_ADULTO_JOVEN: ${{ vars.LIM_ADULTO_JOVEN }}
+  LIM_ADULTO: ${{ vars.LIM_ADULTO }}
 
 jobs:
   sumar_numeros:
     name: Calculo Edad
     runs-on: ubuntu-latest
     outputs:
-      edad: ${{ steps.edad.outputs.anios}}
+      edad: ${{ steps.edad.outputs.edad }}
     steps:
       - name: Realizar calculo
         id: edad
         run: |
-          anio=${{ github.event.inputs.anio }}
+          dia=${{ github.event.inputs.dia }}
           mes=${{ github.event.inputs.mes }}
-          dia=${{ github.event.inputs.mes }}
+          anio=${{ github.event.inputs.anio }}
 
-          echo "dia $dia"
-          anio_actual=$(date +%Y)
-          mes_actual=$(date +%m)
-          dia_actual=$(date +%d)
+          echo "Fecha ingresada: $anio-$mes-$dia"
 
           fecha_nacimiento=$(date -d "$anio-$mes-$dia" +%s)
-          fecha_hoy=$(date +%s)
-
-          dias_totales=$(( (fecha_hoy - fecha_nacimiento) / 86400))
-
-          anios=$(( dias_totales / 365)) >> $GITHUB_OUTPUT
+          fecha_actual=$(date +%s)
+          
+          dias_totales=$(( (fecha_actual - fecha_nacimiento) / 86400 ))
+          anios=$(( dias_totales / 365 ))
           meses=$(( (dias_totales % 365) / 30 ))
           dias=$(( (dias_totales % 365) % 30 ))
-
-          echo "Fecha de nacimiento: $anio-$mes-$dia"
           echo "Edad aproximada: $anios años, $meses meses, $dias días"
+          echo "edad=$anios" >> $GITHUB_OUTPUT
 
   evaluar_resultado:
     name: Clasificación
@@ -62,19 +59,16 @@ jobs:
       - name: Mostrar mensaje según resultado
         run: |
           edad=${{ needs.sumar_numeros.outputs.edad }}
-          if [ "$anio" -lt "$LIM_NINEZ" ]; then
-            echo "edad $anio y limite $LIM_NINEZ"
+          echo "Edad calculada: $edad"
+
+          if [ "$edad" -lt "$LIM_NINEZ" ]; then
             echo "Etapa: Niñez"
-          elif [ "$anio" -lt "$LIM_ADOLESCENCIA" ]; then
-            echo "edad $anio y limite $LIM_ADOLESCENCIA"
+          elif [ "$edad" -lt "$LIM_ADOLESCENCIA" ]; then
             echo "Etapa: Adolescencia"
-          elif [ "$anio" -lt "$LIM_ADULTO_JOVEN" ]; then
-            echo "edad $anio y limite $LIM_ADULTO_JOVEN"
+          elif [ "$edad" -lt "$LIM_ADULTO_JOVEN" ]; then
             echo "Etapa: Adultos Jóvenes"
-          elif [ "$anio" -lt "$LIM_ADULTO" ]; then
-            echo "edad $anio y limite $LIM_ADULTO"
+          elif [ "$edad" -lt "$LIM_ADULTO" ]; then
             echo "Etapa: Adultos"
           else
-            echo "edad $anio es mayor o igual a $LIM_ADULTO"
             echo "Etapa: Vejez"
           fi
