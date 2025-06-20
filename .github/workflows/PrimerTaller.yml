@@ -48,18 +48,12 @@ jobs:
           anio=${{ github.event.inputs.anio }}
           if [[ $anio -lt $LIM_NINEZ ]]; then
             echo "Etapa: Niñez"
-          else
-            if [[ $anio -lt $LIM_ADOLESCENCIA ]]; then
+          elif [[ $anio -lt $LIM_ADOLESCENCIA ]]; then
               echo "Etapa Adolescencia"
-            else
-              if [[ $anio -lt $LIM_ADULTO_JOVEN ]]; then
+            elif [[ $anio -lt $LIM_ADULTO_JOVEN ]]; then
               echo "Etapa Adultos jovenes"
-              else
-                if [[ $anio -lt $LIM_ADULTO ]]; then
-              echo "Etapa Adultos"
-              else
-              echo "Etapa de Vejez"
-                if
-              if
-            fi
+                elif [[ $anio -lt $LIM_ADULTO ]]; then
+                  echo "Etapa Adultos"
+                else
+                echo "Etapa de Vejez"
           fi
