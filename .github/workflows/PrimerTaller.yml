@@ -40,7 +40,7 @@ jobs:
 
           edad=$((anio_actual - anio)) 
 
-          if [$mes_actual -lt $mes] || {[$mes_actual -eq $mes] && [$dia_actual lt $dia];}; then
+          if ["$mes_actual" -lt "$mes"] || {["$mes_actual" -eq "$mes"] && ["$dia_actual" -lt "$dia"];}; then
           edad=$((edad - 1))
           fi
           echo "Años: $edad"
