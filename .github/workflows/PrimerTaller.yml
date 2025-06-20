@@ -37,7 +37,6 @@ jobs:
           echo "año $anio"
           edad=$((2026 - anio))
           echo "Años: $edad"
-          echo "$LIM_NINEZ"
 
   evaluar_resultado:
     name: Clasificación
@@ -47,16 +46,16 @@ jobs:
       - name: Mostrar mensaje según resultado
         run: |
           anio=${{ github.event.inputs.anio }}
-          if [[ $anio -lt $LIM_NINEZ]; then
+          if [[ $anio -lt $LIM_NINEZ ]]; then
             echo "Etapa: Niñez"
           else
-            if [[ $anio -gt $LIM_ADOLESCENCIA ]]; then
+            if [[ $anio -lt $LIM_ADOLESCENCIA ]]; then
               echo "Etapa Adolescencia"
             else
-              if [[ $anio -gt $LIM_ADULTO_JOVEN ]]; then
+              if [[ $anio -lt $LIM_ADULTO_JOVEN ]]; then
               echo "Etapa Adultos jovenes"
               else
-                if [[ $anio -gt $LIM_ADULTO ]]; then
+                if [[ $anio -lt $LIM_ADULTO ]]; then
               echo "Etapa Adultos"
               else
               echo "Etapa de Vejez"
