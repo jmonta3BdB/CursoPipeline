@@ -1,0 +1,48 @@
+name: Clasificación de edades
+on:
+  push:
+    branches:
+      - 'test/*'
+  workflow_dispatch:
+    inputs:
+      dia:
+        description: 'Ingresa el día de nacimiento'
+        required: true
+        type: string
+      mes:
+        description: 'Ingresa el mes de nacimiento'
+        required: true
+        type: string
+      ano:
+        description: 'Ingresa el año de nacimiento'
+        required: true
+        type: string
+env:
+      LIM_NINEZ: ${{ vars.LIM_NINEZ }}
+      LIM_ADOLESCENCIA: ${{ vars.LIM_ADOLESCENCIA }}
+      LIM_ADULTO_JOVEN: ${{ vars.LIM_ADULTO_JOVEN }}
+      LIM_ADULTO: ${{ vars.LIM_ADULTO }}
+
+jobs:
+  sumar_numeros:
+    name: Calculo Edad
+    runs-on: ubuntu-latest
+    steps:
+      - name: Realizar calculo
+        id: suma
+        run: |
+          año=${{github.event.inputs.ano}}
+          edad=$((año - año)): 2026
+          echo "Años: $edad"
+  evaluar_resultado:
+    name: Clasificación
+    needs: sumar_numeros
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar mensaje según resultado
+        run: |
+          if [ "${{ needs.sumar_numeros.outputs.resultado }}" -gt 10 ]; then
+            echo "✅ El resultado es mayor a 10"
+          else
+            echo "⚠️ El resultado es menor o igual a 10"
+          fi
