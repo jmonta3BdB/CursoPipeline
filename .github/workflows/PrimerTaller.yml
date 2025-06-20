@@ -34,6 +34,8 @@ jobs:
           anio=${{ github.event.inputs.anio }}
           mes=${{ github.event.inputs.mes }}
           dia=${{ github.event.inputs.mes }}
+
+          echo "dia $dia"
           anio_actual=$(date +%Y)
           mes_actual=$(date +%m)
           dia_actual=$(date +%d)
@@ -58,18 +60,19 @@ jobs:
       - name: Mostrar mensaje según resultado
         run: |
           anio=${{ github.event.inputs.anio }}
-          if [[ "$anio" -lt "$LIM_NINEZ" ]]; then
+          if [ "$anio" -lt "$LIM_NINEZ" ]; then
             echo "edad $anio y limite $LIM_NINEZ"
             echo "Etapa: Niñez"
-          elif [[ "$anio" -lt "$LIM_ADOLESCENCIA" ]]; then
-              echo "Etapa Adolescencia"
-              echo "edad $anio y limite $LIM_ADOLESCENCIA"
-            elif [[ "$anio" -lt "$LIM_ADULTO_JOVEN" ]]; then
-              echo "Etapa Adultos jovenes"
-              echo "edad $anio y limite $LIM_ADULTO_JOVEN"
-                elif [[ "$anio" -lt "$LIM_ADULTO" ]]; then
-                  echo "Etapa Adultos"
-                  echo "edad $anio y limite $LIM_ADULTO"
-                else
-                echo "Etapa de Vejez"
+          elif [ "$anio" -lt "$LIM_ADOLESCENCIA" ]; then
+            echo "edad $anio y limite $LIM_ADOLESCENCIA"
+            echo "Etapa: Adolescencia"
+          elif [ "$anio" -lt "$LIM_ADULTO_JOVEN" ]; then
+            echo "edad $anio y limite $LIM_ADULTO_JOVEN"
+            echo "Etapa: Adultos Jóvenes"
+          elif [ "$anio" -lt "$LIM_ADULTO" ]; then
+            echo "edad $anio y limite $LIM_ADULTO"
+            echo "Etapa: Adultos"
+          else
+            echo "edad $anio es mayor o igual a $LIM_ADULTO"
+            echo "Etapa: Vejez"
           fi
