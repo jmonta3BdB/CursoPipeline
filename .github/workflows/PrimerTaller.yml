@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       dia:
-        description: 'Ingresa el día de nacimiento'
+        description: 'Ingresa el día de nacimiento (DD)'
         required: true
         type: string
       mes:
-        description: 'Ingresa el mes de nacimiento'
+        description: 'Ingresa el mes de nacimiento (MM)' 
         required: true
         type: string
       anio:
-        description: 'Ingresa el año de nacimiento'
+        description: 'Ingresa el año de nacimiento (YYYY)'
         required: true
         type: string
 
@@ -38,13 +38,13 @@ jobs:
 
           echo "Fecha ingresada: $anio-$mes-$dia"
 
-          fecha_nacimiento=$(date -d "$anio-$mes-$dia")
-          fecha_actual=$(date)
+          fecha_nacimiento=$(date -d "$anio-$mes-$dia" +%s)
+          fecha_actual=$(date +%s)
 
-          dias_totales=$(( (fecha_actual - fecha_nacimiento)))
+          dias_totales=$(( (fecha_actual - fecha_nacimiento) / 86400 ))
           anios=$(( dias_totales / 365 ))
           meses=$(( (dias_totales % 365) / 30 ))
-          dias=$(( (dias_totales % 365) % 30 ))
+          dias=$(( (dias_totales % 365) / 86400 ))
           echo "Edad aproximada: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
 
