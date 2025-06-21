@@ -4,20 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       dia:
-        description: 'Ingresa el día de nacimiento'
+        description: 'Ingresa el día de nacimiento (DD)'
         required: true
         type: string
-        default: '(DD)'
       mes:
-        description: 'Ingresa el mes de nacimiento'
+        description: 'Ingresa el mes de nacimiento (MM)' 
         required: true
         type: string
-        default: '(MM)'
       anio:
-        description: 'Ingresa el año de nacimiento'
+        description: 'Ingresa el año de nacimiento (YYYY)'
         required: true
         type: string
-        default: '(YYYY)'
 
 env:
   LIM_NINEZ: ${{ vars.LIM_NINEZ }}
