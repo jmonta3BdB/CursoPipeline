@@ -38,10 +38,10 @@ jobs:
 
           echo "Fecha ingresada: $anio-$mes-$dia"
 
-          fecha_nacimiento=$(date -d "$anio-$mes-$dia" +%s)
-          fecha_actual=$(date +%s)
+          fecha_nacimiento=$(date -d "$anio-$mes-$dia")
+          fecha_actual=$(date)
 
-          dias_totales=$(( (fecha_actual - fecha_nacimiento) / 86400 ))
+          dias_totales=$(( (fecha_actual - fecha_nacimiento)))
           anios=$(( dias_totales / 365 ))
           meses=$(( (dias_totales % 365) / 30 ))
           dias=$(( (dias_totales % 365) % 30 ))
