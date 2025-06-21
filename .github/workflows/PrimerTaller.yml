@@ -7,14 +7,17 @@ on:
         description: 'Ingresa el día de nacimiento'
         required: true
         type: string
+        default: '(DD)'
       mes:
         description: 'Ingresa el mes de nacimiento'
         required: true
         type: string
+        default: '(MM)'
       anio:
         description: 'Ingresa el año de nacimiento'
         required: true
         type: string
+        default: '(YYYY)'
 
 env:
   LIM_NINEZ: ${{ vars.LIM_NINEZ }}
@@ -44,7 +47,7 @@ jobs:
           dias_totales=$(( (fecha_actual - fecha_nacimiento) / 86400 ))
           anios=$(( dias_totales / 365 ))
           meses=$(( (dias_totales % 365) / 30 ))
-          dias=$(( (dias_totales % 365) % 30 ))
+          dias=$(( (dias_totales % 365) / 86400 ))
           echo "Edad aproximada: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
 
