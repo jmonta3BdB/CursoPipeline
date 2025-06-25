@@ -47,13 +47,7 @@ jobs:
           meses=$((current_month - mes))
           dias=$((current_day - dia))
 
-          # Ajuste si el cumpleaños no ha pasado este año
-          if [ "$meses" -lt 0 ] || { [ "$meses" -eq 0 ] && [ "$dias" -lt 0 ]; }; then
-            edad=$((edad - 1))
-            meses=$((meses + 12))
-          fi
-
-          # Ajuste de días si el día aún no ha llegado este mes
+          # Ajuste si los días son negativos
           if [ "$dias" -lt 0 ]; then
             meses=$((meses - 1))
             prev_month=$((10#$current_month - 1))
@@ -64,6 +58,12 @@ jobs:
             fi
             dias_en_mes_anterior=$(cal $prev_month $prev_year | awk 'NF {DAYS = $NF}; END {print DAYS}')
             dias=$((dias + dias_en_mes_anterior))
+          fi
+
+          # Ajuste si el cumpleaños aún no ha llegado este año
+          if [ "$meses" -lt 0 ]; then
+            edad=$((edad - 1))
+            meses=$((meses + 12))
           fi
 
           echo "Edad exacta: $edad años, $meses meses, $dias días"
