@@ -34,57 +34,39 @@ jobs:
         run: |
           export TZ=America/Bogota
 
-          # Convertir los inputs a enteros base 10
+          # Convertir a números enteros
           dia_nac=$((10#${{ github.event.inputs.dia }}))
           mes_nac=$((10#${{ github.event.inputs.mes }}))
           anio_nac=$((10#${{ github.event.inputs.anio }}))
 
-          echo "Fecha ingresada: $anio_nac-$mes_nac-$dia_nac"
-
-          # Obtener fecha actual
           dia_act=$(date +%-d)
           mes_act=$(date +%-m)
           anio_act=$(date +%-Y)
 
-          echo "Fecha actual: $anio_act-$mes_act-$dia_act"
-
-          # Calcular diferencias iniciales
+          # Diferencias iniciales
           anios=$((anio_act - anio_nac))
           meses=$((mes_act - mes_nac))
           dias=$((dia_act - dia_nac))
 
-          # Función para saber cuántos días tiene un mes
-          dias_en_mes() {
-            local mes=$1
-            local anio=$2
-            case $mes in
-              1|3|5|7|8|10|12) echo 31 ;;
-              4|6|9|11) echo 30 ;;
-              2)
-                if (( (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0) )); then
-                  echo 29
+          # Ajustar días si negativos
+          if [ "$dias" -lt 0 ]; then
+            meses=$((meses - 1))
+            # Estimar días del mes anterior de forma básica
+            case $mes_act in
+              1|2|4|6|8|9|11) dias_mes_ant=31 ;;
+              5|7|10|12) dias_mes_ant=30 ;;
+              3)
+                if ((anio_act % 4 == 0 && (anio_act % 100 != 0 || anio_act % 400 == 0))); then
+                  dias_mes_ant=29
                 else
-                  echo 28
+                  dias_mes_ant=28
                 fi
                 ;;
             esac
-          }
-
-          # Ajuste si los días son negativos
-          if [ "$dias" -lt 0 ]; then
-            meses=$((meses - 1))
-            if [ "$mes_act" -eq 1 ]; then
-              mes_anterior=12
-              anio_anterior=$((anio_act - 1))
-            else
-              mes_anterior=$((mes_act - 1))
-              anio_anterior=$anio_act
-            fi
-            dias_prev=$(dias_en_mes $mes_anterior $anio_anterior)
-            dias=$((dias + dias_prev))
+            dias=$((dias + dias_mes_ant))
           fi
 
-          # Ajuste si los meses son negativos
+          # Ajustar meses si negativos
           if [ "$meses" -lt 0 ]; then
             anios=$((anios - 1))
             meses=$((meses + 12))
@@ -92,7 +74,8 @@ jobs:
 
           echo "Edad exacta: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
-
+          echo "meses=$meses" >> $GITHUB_OUTPUT
+          echo "dias=$dias" >> $GITHUB_OUTPUT
 
   clasificacion_edad:
     name: Clasificación
