@@ -32,20 +32,52 @@ jobs:
       - name: Realizar calculo
         id: edad
         run: |
-          dia=${{ github.event.inputs.dia }}
-          mes=${{ github.event.inputs.mes }}
-          anio=${{ github.event.inputs.anio }}
+          # Se exporta fecha la zona horaria de colombia
+          export TZ=America/Bogota
 
-          echo "Fecha ingresada: $anio-$mes-$dia"
+          # Convertir los valores a enteros base 10 para evitar errores con ceros a la izquierda
+          dia_nac=$((10#${{ github.event.inputs.dia }}))
+          mes_nac=$((10#${{ github.event.inputs.mes }}))
+          anio_nac=$((10#${{ github.event.inputs.anio }}))
+          echo "Fecha de nacimiento: $anio_nac-$mes_nac-$dia_nac"
 
-          fecha_nacimiento=$(date -d "$anio-$mes-$dia" +%s)
-          fecha_actual=$(date +%s)
+          # se obtiene la fecha actual del sistema
+          dia_act=$(date +%-d)
+          mes_act=$(date +%-m)
+          anio_act=$(date +%-Y)
+          echo "Fecha actual: $anio_act-$mes_act-$dia_act"
 
-          dias_totales=$(( (fecha_actual - fecha_nacimiento) / 86400 ))
-          anios=$(( dias_totales / 365 ))
-          meses=$(( (dias_totales % 365) / 30 ))
-          dias=$(( (dias_totales % 365) / 86400 ))
-          echo "Edad aproximada: $anios años, $meses meses, $dias días"
+          # Se calcula la diferencia directa entre las fechas
+          anios=$((anio_act - anio_nac))
+          meses=$((mes_act - mes_nac))
+          dias=$((dia_act - dia_nac))
+
+          # Ajustar días negativos de acuerdo al paso anterior donde se calcula la diferencia entre las fechas
+          if [ "$dias" -lt 0 ]; then
+            meses=$((meses - 1))
+
+            # Estimar días del mes anterior (considerando año bisiesto si aplica para febrero)
+            case $mes_act in
+              1|2|4|6|8|9|11) dias_mes_ant=31 ;;
+              5|7|10|12) dias_mes_ant=30 ;;
+              3)
+                if ((anio_act % 4 == 0 && (anio_act % 100 != 0 || anio_act % 400 == 0))); then
+                  dias_mes_ant=29
+                else
+                  dias_mes_ant=28
+                fi
+                ;;
+            esac
+            dias=$((dias + dias_mes_ant))
+          fi
+
+          # Ajustar meses si su valor es negativo
+          if [ "$meses" -lt 0 ]; then
+            anios=$((anios - 1))
+            meses=$((meses + 12))
+          fi
+
+          echo "Edad exacta: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
 
   clasificacion_edad:
