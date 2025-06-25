@@ -38,47 +38,21 @@ jobs:
 
           echo "Fecha de nacimiento: $anio-$mes-$dia"
 
-          current_day=$(date +%d)
-          current_month=$(date +%m)
-          current_year=$(date +%Y)
+          # Fecha actual en formato YYYY-MM-DD
+          hoy=$(date +%Y-%m-%d)
+          nacimiento=$(printf "%04d-%02d-%02d" "$anio" "$mes" "$dia")
 
-          # Convertir todos a enteros base 10
-          dia_nac=$((10#$dia))
-          mes_nac=$((10#$mes))
-          anio_nac=$((10#$anio))
-          day_now=$((10#$current_day))
-          month_now=$((10#$current_month))
-          year_now=$((10#$current_year))
-
-          meses=$((month_now - mes_nac))
-          dias=$((day_now - dia_nac))
-
-          # Ajuste de días si negativos
-          if [ "$dias" -lt 0 ]; then
-            meses=$((meses - 1))
-            prev_month=$((month_now - 1))
-            prev_year=$year_now
-            if [ "$prev_month" -eq 0 ]; then
-              prev_month=12
-              prev_year=$((year_now - 1))
-            fi
-            dias_en_mes_anterior=$(cal $prev_month $prev_year | awk 'NF {DAYS = $NF}; END {print DAYS}')
-            dias=$((dias + dias_en_mes_anterior))
-          fi
-
-          # Ajuste de meses si negativos
-          if [ "$meses" -lt 0 ]; then
-            meses=$((meses + 12))
-            year_now=$((year_now - 1))
-          fi
-
-          edad=$((year_now - anio_nac))
+          # Usar GNU date para obtener diferencia total en años, meses y días
+          edad=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%Y')
+          meses=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%m')
+          dias=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%d')
 
           echo "Edad exacta: $edad años, $meses meses, $dias días"
 
           echo "edad=$edad" >> $GITHUB_OUTPUT
           echo "meses=$meses" >> $GITHUB_OUTPUT
           echo "dias=$dias" >> $GITHUB_OUTPUT
+
 
   clasificacion_edad:
     name: Clasificación
