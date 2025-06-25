@@ -32,26 +32,47 @@ jobs:
       - name: Realizar calculo
         id: edad
         run: |
-          dia=${{ github.event.inputs.dia }}
-          mes=${{ github.event.inputs.mes }}
-          anio=${{ github.event.inputs.anio }}
+          dia_nac=$((10#${{ github.event.inputs.dia }}))
+          mes_nac=$((10#${{ github.event.inputs.mes }}))
+          anio_nac=$((10#${{ github.event.inputs.anio }}))
 
-          echo "Fecha de nacimiento: $anio-$mes-$dia"
+          echo "Fecha de nacimiento: $anio_nac-$mes_nac-$dia_nac"
 
-          # Fecha actual en formato YYYY-MM-DD
-          hoy=$(date +%Y-%m-%d)
-          nacimiento=$(printf "%04d-%02d-%02d" "$anio" "$mes" "$dia")
+          # Obtener fecha actual
+          dia_act=$(date +%-d)
+          mes_act=$(date +%-m)
+          anio_act=$(date +%-Y)
 
-          # Usar GNU date para obtener diferencia total en años, meses y días
-          edad=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%Y')
-          meses=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%m')
-          dias=$(dateutils.ddiff "$nacimiento" "$hoy" -f '%d')
+          edad=$((anio_act - anio_nac))
+          meses=$((mes_act - mes_nac))
+          dias=$((dia_act - dia_nac))
+
+          # Ajustar días si negativos
+          if [ "$dias" -lt 0 ]; then
+            meses=$((meses - 1))
+            # Calcular días del mes anterior
+            if [ "$mes_act" -eq 1 ]; then
+              mes_anterior=12
+              anio_anterior=$((anio_act - 1))
+            else
+              mes_anterior=$((mes_act - 1))
+              anio_anterior=$anio_act
+            fi
+            dias_en_mes_anterior=$(cal $mes_anterior $anio_anterior | awk 'NF {DAYS = $NF}; END {print DAYS}')
+            dias=$((dias + dias_en_mes_anterior))
+          fi
+
+          # Ajustar meses si negativos
+          if [ "$meses" -lt 0 ]; then
+            edad=$((edad - 1))
+            meses=$((meses + 12))
+          fi
 
           echo "Edad exacta: $edad años, $meses meses, $dias días"
-
           echo "edad=$edad" >> $GITHUB_OUTPUT
           echo "meses=$meses" >> $GITHUB_OUTPUT
           echo "dias=$dias" >> $GITHUB_OUTPUT
+
 
 
   clasificacion_edad:
