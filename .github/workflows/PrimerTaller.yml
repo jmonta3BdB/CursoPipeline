@@ -32,6 +32,7 @@ jobs:
       - name: Realizar calculo
         id: edad
         run: |
+          export TZ=America/Bogota
           # Convertir los inputs a enteros base 10
           dia_nac=$((10#${{ github.event.inputs.dia }}))
           mes_nac=$((10#${{ github.event.inputs.mes }}))
