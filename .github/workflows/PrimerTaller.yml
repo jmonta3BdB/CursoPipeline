@@ -42,7 +42,7 @@ jobs:
           current_month=$(date +%m)
           current_year=$(date +%Y)
 
-          # Convertir a enteros base 10 para evitar problemas con ceros a la izquierda
+          # Convertir todos a enteros base 10
           dia_nac=$((10#$dia))
           mes_nac=$((10#$mes))
           anio_nac=$((10#$anio))
@@ -50,11 +50,10 @@ jobs:
           month_now=$((10#$current_month))
           year_now=$((10#$current_year))
 
-          edad=$((year_now - anio_nac))
           meses=$((month_now - mes_nac))
           dias=$((day_now - dia_nac))
 
-          # Paso 1: Ajustar días si negativos
+          # Ajuste de días si negativos
           if [ "$dias" -lt 0 ]; then
             meses=$((meses - 1))
             prev_month=$((month_now - 1))
@@ -67,11 +66,13 @@ jobs:
             dias=$((dias + dias_en_mes_anterior))
           fi
 
-          # Paso 2: Ajustar edad si el cumpleaños aún no ha llegado
+          # Ajuste de meses si negativos
           if [ "$meses" -lt 0 ]; then
-            edad=$((edad - 1))
             meses=$((meses + 12))
+            year_now=$((year_now - 1))
           fi
+
+          edad=$((year_now - anio_nac))
 
           echo "Edad exacta: $edad años, $meses meses, $dias días"
 
