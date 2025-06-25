@@ -44,10 +44,14 @@ jobs:
           mes_act=$(date +%-m)
           anio_act=$(date +%-Y)
 
+          echo "Fecha actual: $anio_act-$mes_act-$dia_act"
+
           # Calcular diferencia inicial
           anios=$((anio_act - anio_nac))
           meses=$((mes_act - mes_nac))
           dias=$((dia_act - dia_nac))
+
+          echo "diferentecia: años $anios - meses $meses - días $dias"
 
           # Ajustar días si negativos
           if [ "$dias" -lt 0 ]; then
