@@ -38,7 +38,6 @@ jobs:
 
           echo "Fecha de nacimiento: $anio-$mes-$dia"
 
-          # Fecha actual
           current_day=$(date +%d)
           current_month=$(date +%m)
           current_year=$(date +%Y)
@@ -47,7 +46,7 @@ jobs:
           meses=$((current_month - mes))
           dias=$((current_day - dia))
 
-          # Ajuste si los días son negativos
+          # Paso 1: Ajustar días si negativos
           if [ "$dias" -lt 0 ]; then
             meses=$((meses - 1))
             prev_month=$((10#$current_month - 1))
@@ -60,7 +59,7 @@ jobs:
             dias=$((dias + dias_en_mes_anterior))
           fi
 
-          # Ajuste si el cumpleaños aún no ha llegado este año
+          # Paso 2: Ajustar edad si el cumpleaños aún no ha llegado
           if [ "$meses" -lt 0 ]; then
             edad=$((edad - 1))
             meses=$((meses + 12))
@@ -71,6 +70,7 @@ jobs:
           echo "edad=$edad" >> $GITHUB_OUTPUT
           echo "meses=$meses" >> $GITHUB_OUTPUT
           echo "dias=$dias" >> $GITHUB_OUTPUT
+
 
   clasificacion_edad:
     name: Clasificación
