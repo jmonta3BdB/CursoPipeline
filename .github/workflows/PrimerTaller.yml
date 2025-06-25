@@ -45,7 +45,7 @@ jobs:
           anio_act=$(date +%-Y)
 
           # Calcular diferencia inicial
-          años=$((anio_act - anio_nac))
+          anios=$((anio_act - anio_nac))
           meses=$((mes_act - mes_nac))
           dias=$((dia_act - dia_nac))
 
@@ -67,12 +67,12 @@ jobs:
 
           # Ajustar meses si negativos
           if [ "$meses" -lt 0 ]; then
-            años=$((años - 1))
+            anios=$((anios - 1))
             meses=$((meses + 12))
           fi
 
-          echo "Edad exacta: $años años, $meses meses, $dias días"
-          echo "edad=$años" >> $GITHUB_OUTPUT
+          echo "Edad exacta: $anios años, $meses meses, $dias días"
+          echo "edad=$anios" >> $GITHUB_OUTPUT
 
   clasificacion_edad:
     name: Clasificación
