@@ -36,17 +36,41 @@ jobs:
           mes=${{ github.event.inputs.mes }}
           anio=${{ github.event.inputs.anio }}
 
-          echo "Fecha ingresada: $anio-$mes-$dia"
+          echo "Fecha de nacimiento: $anio-$mes-$dia"
 
-          fecha_nacimiento=$(date -d "$anio-$mes-$dia")
-          fecha_actual=$(date)
+          # Fecha actual
+          current_day=$(date +%d)
+          current_month=$(date +%m)
+          current_year=$(date +%Y)
 
-          dias_totales=$(( (fecha_actual - fecha_nacimiento)))
-          anios=$(( dias_totales / 365 ))
-          meses=$(( dias_totales / 30 ))
-          dias=$(( dias_totales / 30 ))
-          echo "Edad aproximada: $anios años, $meses meses, $dias días"
-          echo "edad=$anios" >> $GITHUB_OUTPUT
+          edad=$((current_year - anio))
+          meses=$((current_month - mes))
+          dias=$((current_day - dia))
+
+          # Ajuste si el cumpleaños no ha pasado este año
+          if [ "$meses" -lt 0 ] || { [ "$meses" -eq 0 ] && [ "$dias" -lt 0 ]; }; then
+            edad=$((edad - 1))
+            meses=$((meses + 12))
+          fi
+
+          # Ajuste de días si el día aún no ha llegado este mes
+          if [ "$dias" -lt 0 ]; then
+            meses=$((meses - 1))
+            prev_month=$((10#$current_month - 1))
+            prev_year=$current_year
+            if [ "$prev_month" -eq 0 ]; then
+              prev_month=12
+              prev_year=$((current_year - 1))
+            fi
+            dias_en_mes_anterior=$(cal $prev_month $prev_year | awk 'NF {DAYS = $NF}; END {print DAYS}')
+            dias=$((dias + dias_en_mes_anterior))
+          fi
+
+          echo "Edad exacta: $edad años, $meses meses, $dias días"
+
+          echo "edad=$edad" >> $GITHUB_OUTPUT
+          echo "meses=$meses" >> $GITHUB_OUTPUT
+          echo "dias=$dias" >> $GITHUB_OUTPUT
 
   clasificacion_edad:
     name: Clasificación
