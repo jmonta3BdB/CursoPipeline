@@ -42,18 +42,26 @@ jobs:
           current_month=$(date +%m)
           current_year=$(date +%Y)
 
-          edad=$((current_year - anio))
-          meses=$((current_month - mes))
-          dias=$((current_day - dia))
+          # Convertir a enteros base 10 para evitar problemas con ceros a la izquierda
+          dia_nac=$((10#$dia))
+          mes_nac=$((10#$mes))
+          anio_nac=$((10#$anio))
+          day_now=$((10#$current_day))
+          month_now=$((10#$current_month))
+          year_now=$((10#$current_year))
+
+          edad=$((year_now - anio_nac))
+          meses=$((month_now - mes_nac))
+          dias=$((day_now - dia_nac))
 
           # Paso 1: Ajustar días si negativos
           if [ "$dias" -lt 0 ]; then
             meses=$((meses - 1))
-            prev_month=$((10#$current_month - 1))
-            prev_year=$current_year
+            prev_month=$((month_now - 1))
+            prev_year=$year_now
             if [ "$prev_month" -eq 0 ]; then
               prev_month=12
-              prev_year=$((current_year - 1))
+              prev_year=$((year_now - 1))
             fi
             dias_en_mes_anterior=$(cal $prev_month $prev_year | awk 'NF {DAYS = $NF}; END {print DAYS}')
             dias=$((dias + dias_en_mes_anterior))
@@ -70,7 +78,6 @@ jobs:
           echo "edad=$edad" >> $GITHUB_OUTPUT
           echo "meses=$meses" >> $GITHUB_OUTPUT
           echo "dias=$dias" >> $GITHUB_OUTPUT
-
 
   clasificacion_edad:
     name: Clasificación
