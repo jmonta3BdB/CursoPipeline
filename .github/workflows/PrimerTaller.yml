@@ -32,26 +32,31 @@ jobs:
       - name: Realizar calculo
         id: edad
         run: |
+          # Se exporta fecha la zona horaria de colombia
           export TZ=America/Bogota
 
-          # Convertir a números enteros
+          # Convertir los valores a enteros base 10 para evitar errores con ceros a la izquierda
           dia_nac=$((10#${{ github.event.inputs.dia }}))
           mes_nac=$((10#${{ github.event.inputs.mes }}))
           anio_nac=$((10#${{ github.event.inputs.anio }}))
+          echo "Fecha de nacimiento: $anio_nac-$mes_nac-$dia_nac"
 
+          # se obtiene la fecha actual del sistema
           dia_act=$(date +%-d)
           mes_act=$(date +%-m)
           anio_act=$(date +%-Y)
+          echo "Fecha actual: $anio_act-$mes_act-$dia_act"
 
-          # Diferencias iniciales
+          # Se calcula la diferencia directa entre las fechas
           anios=$((anio_act - anio_nac))
           meses=$((mes_act - mes_nac))
           dias=$((dia_act - dia_nac))
 
-          # Ajustar días si negativos
+          # Ajustar días negativos de acuerdo al paso anterior donde se calcula la diferencia entre las fechas
           if [ "$dias" -lt 0 ]; then
             meses=$((meses - 1))
-            # Estimar días del mes anterior de forma básica
+
+            # Estimar días del mes anterior (considerando año bisiesto si aplica para febrero)
             case $mes_act in
               1|2|4|6|8|9|11) dias_mes_ant=31 ;;
               5|7|10|12) dias_mes_ant=30 ;;
@@ -66,7 +71,7 @@ jobs:
             dias=$((dias + dias_mes_ant))
           fi
 
-          # Ajustar meses si negativos
+          # Ajustar meses si su valor es negativo
           if [ "$meses" -lt 0 ]; then
             anios=$((anios - 1))
             meses=$((meses + 12))
@@ -74,8 +79,6 @@ jobs:
 
           echo "Edad exacta: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
-          echo "meses=$meses" >> $GITHUB_OUTPUT
-          echo "dias=$dias" >> $GITHUB_OUTPUT
 
   clasificacion_edad:
     name: Clasificación
