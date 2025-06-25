@@ -43,8 +43,8 @@ jobs:
 
           dias_totales=$(( (fecha_actual - fecha_nacimiento)))
           anios=$(( dias_totales / 365 ))
-          meses=$(( (dias_totales / 30 ))
-          dias=$(( (dias_totales / 30 ))
+          meses=$(( dias_totales / 30 ))
+          dias=$(( dias_totales / 30 ))
           echo "Edad aproximada: $anios años, $meses meses, $dias días"
           echo "edad=$anios" >> $GITHUB_OUTPUT
 
