@@ -7,6 +7,8 @@ jobs:
   sumar_numeros:
     name: Sumar Números
     runs-on: ubuntu-latest
+    outputs:
+      resultado: ${{ steps.suma.outputs.resultado }}
     env:
       NUM1: ${{ vars.NUM1 }}
       NUM2: ${{ vars.NUM2 }}
@@ -25,7 +27,8 @@ jobs:
     steps:
       - name: Mostrar mensaje según resultado
         run: |
-          if [ "${{ needs.sumar_numeros.outputs.resultado }}" -gt 10 ]; then
+          valor=${{ needs.sumar_numeros.outputs.resultado }}
+          if [ "$valor" -gt 10 ]; then
             echo "✅ El resultado es mayor a 10"
           else
             echo "⚠️ El resultado es menor o igual a 10"
