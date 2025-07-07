@@ -1,0 +1,77 @@
+name: Operaciones Matemáticas Básicas
+
+on:
+  workflow_dispatch:
+    inputs:
+      numero1:
+        description: 'Primer número'
+        required: true
+        type: string
+      numero2:
+        description: 'Segundo número'
+        required: true
+        type: string
+
+jobs:
+  preparar-valores:
+    name: Preparar variables globales
+    runs-on: ubuntu-latest
+    outputs:
+      num1: ${{ steps.variables.outputs.num1 }}
+      num2: ${{ steps.variables.outputs.num2 }}
+    steps:
+      - name: Asignar variables
+        id: variables
+        run: |
+          echo "num1=${{ inputs.numero1 }}" >> $GITHUB_OUTPUT
+          echo "num2=${{ inputs.numero2 }}" >> $GITHUB_OUTPUT
+
+  suma:
+    name: ➕ Calcular Suma
+    needs: preparar-valores
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar resultado
+        run: |
+          echo "Suma: $((${{
+            needs.preparar-valores.outputs.num1 }} + ${{
+            needs.preparar-valores.outputs.num2 }}))"
+
+  resta:
+    name: ➖ Calcular Resta
+    needs: preparar-valores
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar resultado
+        run: |
+          echo "Resta: $((${{
+            needs.preparar-valores.outputs.num1 }} - ${{
+            needs.preparar-valores.outputs.num2 }}))"
+
+  multiplicacion:
+    name: ✖️ Calcular Multiplicación
+    needs: preparar-valores
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar resultado
+        run: |
+          echo "Multiplicación: $((${{
+            needs.preparar-valores.outputs.num1 }} * ${{
+            needs.preparar-valores.outputs.num2 }}))"
+
+  division:
+    name: ➗ Calcular División
+    needs: preparar-valores
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar resultado
+        run: |
+          NUM1=${{ needs.preparar-valores.outputs.num1 }}
+          NUM2=${{ needs.preparar-valores.outputs.num2 }}
+
+          if [ "$NUM2" -eq 0 ]; then
+            echo "⚠️ No se puede dividir por cero"
+          else
+            resultado=$(echo "scale=2; $NUM1 / $NUM2" | bc)
+            echo "División: $resultado"
+          fi
