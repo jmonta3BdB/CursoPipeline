@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Crear archivo JSON
-        uses: devops-actions/json-to-file@v1
+        uses: devops-actions/json-to-file@v1.0.4
         with:
           json: |
             {
@@ -21,10 +21,8 @@ jobs:
             }
           filename: archivo.json
 
-      - name: Subir como artefacto con verificación
-        uses: cytopia/upload-artifact-verify-action@v0.1.12
+      - name: Subir archivo.json como artefacto
+        uses: actions/upload-artifact@v4
         with:
           name: archivo-json
           path: archivo.json
-          post_command: |
-            echo "Verificado: $(cat {{download_path}})"  # opcional para confirmar contenido
