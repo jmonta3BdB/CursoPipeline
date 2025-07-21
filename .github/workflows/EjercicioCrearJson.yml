@@ -1,0 +1,30 @@
+name: Generar y subir JSON automáticamente
+
+on:
+  workflow_dispatch:    # puedes cambiar el disparador a push, schedule, etc.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear archivo JSON
+        uses: devops-actions/json-to-file@v1
+        with:
+          json: |
+            {
+              "name": "pipelines",
+              "activity": 3,
+              "module": 2,
+              "isRequired": false
+            }
+          filename: archivo.json
+
+      - name: Subir como artefacto con verificación
+        uses: cytopia/upload-artifact-verify-action@v0.1.12
+        with:
+          name: archivo-json
+          path: archivo.json
+          post_command: |
+            echo "Verificado: $(cat {{download_path}})"  # opcional para confirmar contenido
