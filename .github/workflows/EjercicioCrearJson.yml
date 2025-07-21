@@ -1,8 +1,10 @@
 name: Generar y subir JSON automáticamente
 
 on:
-  workflow_dispatch:    # puedes cambiar el disparador a push, schedule, etc.
-
+  push:
+    branches:
+      - main
+      
 jobs:
   build:
     runs-on: ubuntu-latest
