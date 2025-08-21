@@ -1,81 +1,86 @@
-name: Generar PDF de eventos históricos
+name: Exportación de HTML a PDF
 
 on:
   workflow_dispatch:
     inputs:
-      mes:
-        description: 'Mes del evento (MM)'
+      month:
+        description: "Mes en formato MM"
         required: true
-      dia:
-        description: 'Día del evento (DD)'
+        type: string
+      day:
+        description: "Día en formato DD"
         required: true
+        type: string
 
 env:
   LANG: ${{ vars.LANG }} # Variable de entorno definida en el repositorio
 
 jobs:
   fetch-events:
-    name: Obtener eventos desde API
     runs-on: ubuntu-latest
     outputs:
-      events: ${{ steps.set-events.outputs.events }}
+      events: ${{ steps.extract-events.outputs.events }}
     steps:
-      - name: Configurar clave del cache
-        id: cache-key
-        run: echo "key=events-${{ github.event.inputs.mes }}-${{ github.event.inputs.dia }}-${{ env.LANG }}" >> $GITHUB_OUTPUT
+      - name: Setear variables mes y día
+        run: |
+          echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
+          echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
 
-      - name: Restaurar cache de eventos
-        id: cache
+      - name: Restaurar cache API
+        id: cache-api
         uses: actions/cache@v4
         with:
-          path: ./events.json
-          key: ${{ steps.cache-key.outputs.key }}
+          path: response.json
+          key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
 
-      - name: Llamar API (si no hay cache)
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Consumir API si no hay cache
+        if: steps.cache-api.outputs.cache-hit != 'true'
         run: |
-          curl -s "https://history.muffinlabs.com/date/${{ github.event.inputs.mes }}/${{ github.event.inputs.dia }}?lang=${{ env.LANG }}" -o events.json
+          curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${LANG}/onthisday/selected/${MONTH}/${DAY}" \
+            -H "User-Agent: github-actions" > response.json
 
-      - name: Guardar eventos en cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
+      - name: Extraer eventos del API
+        id: extract-events
+        uses: actions/github-script@v7
         with:
-          path: ./events.json
-          key: ${{ steps.cache-key.outputs.key }}
-
-      - name: Leer eventos y generar matriz
-        id: set-events
-        run: |
-          EVENTS=$(jq -c '.data.Events' events.json)
-          echo "events=$EVENTS" >> $GITHUB_OUTPUT
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+            const events = (data.selected || []).map(ev => ({
+              title: (ev.pages[0]?.title || 'Sin_titulo')
+                        .replace(/[\s¿?¡!;:]/g, '_')
+                        .replace(/[áàäâ]/gi,'a')
+                        .replace(/[éèëê]/gi,'e')
+                        .replace(/[íìïî]/gi,'i')
+                        .replace(/[óòöô]/gi,'o')
+                        .replace(/[úùüû]/gi,'u'),
+              url: ev.pages[0]?.content_urls?.desktop?.page || ''
+            }));
+            core.setOutput("events", JSON.stringify(events));
 
   process-events:
-    name: Procesar eventos
     needs: fetch-events
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false # resiliencia: si falla un paralelo, los demás continúan
+      fail-fast: false
       matrix:
         event: ${{ fromJson(needs.fetch-events.outputs.events) }}
     steps:
-      - name: Crear archivo HTML
+      - name: Preparar nombre del PDF
         run: |
-          mkdir -p public
-          echo "<html><head><meta charset='utf-8'><title>Evento</title></head><body>" > public/event-${{ matrix.event.year }}.html
-          echo "<h1>Evento en ${{ matrix.event.year }}</h1>" >> public/event-${{ matrix.event.year }}.html
-          echo "<p>${{ matrix.event.text }}</p>" >> public/event-${{ matrix.event.year }}.html
-          echo "</body></html>" >> public/event-${{ matrix.event.year }}.html
+          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
 
-      - name: Convertir HTML a PDF
-        uses: LukaszLapaj/html-to-pdf-action@master
+      - name: Convertir URL a PDF con WebToPDF Action
+        uses: misaelnieto/web_to_pdf_action@master
         with:
-          htmlFile: ./public/event-${{ matrix.event.year }}.html
-          outputFile: ./public/event-${{ matrix.event.year }}.pdf
-          pdfOptions: '{"format": "A4", "margin": {"top": "15mm", "left": "15mm", "right": "15mm", "bottom": "15mm"}}'
+          webPageURL: ${{ matrix.event.url }}
+          outputFile: ${{ env.PDF_NAME }}
+          usePuppeteer: true
+          pdfOptions: '{"format":"A4","margin":{"top":"10mm","left":"10mm","right":"10mm","bottom":"10mm"}}'
 
       - name: Subir artefacto PDF
         uses: actions/upload-artifact@v4
         with:
-          name: evento-${{ matrix.event.year }}
-          path: ./public/event-${{ matrix.event.year }}.pdf
+          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}
+          path: ${{ env.PDF_NAME }}
           retention-days: 1
