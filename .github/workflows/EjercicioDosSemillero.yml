@@ -1,84 +1,100 @@
 name: Exportación de PDF
 
 on:
-  workflow_dispatch:
-    inputs:
-      month:
-        description: "Mes en formato MM"
-        required: true
-        type: string
-      day:
-        description: "Día en formato DD"
-        required: true
-        type: string
-
+    workflow_dispatch:
+      inputs:
+        month:
+          description: "Mes en formato MM"
+          required: true
+          type: string
+        day:
+          description: "Día en formato DD"
+          required: true
+          type: string
+  
 env:
-  LANG: ${{ vars.LANG }}
-
+    LANG: ${{ vars.LANG }} # Variable de entorno definida en el repositorio
+  
 jobs:
-  fetch-events:
-    runs-on: ubuntu-latest
-    outputs:
-      events: ${{ steps.extract-events.outputs.events }}
-    steps:
-      - name: Setear variables mes y día
-        run: |
-          echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
-          echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
-
-      - name: Restaurar cache API
-        id: cache-api
-        uses: actions/cache@v4
-        with:
-          path: response.json
-          key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
-
-      - name: Consumir API si no hay cache
-        if: steps.cache-api.outputs.cache-hit != 'true'
-        run: |
-          curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${LANG}/onthisday/selected/${MONTH}/${DAY}" \
-            -H "User-Agent: github-actions" > response.json
-
-      - name: Extraer eventos del API
-        id: extract-events
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
-            const events = (data.selected || []).map(ev => ({
-              title: (ev.pages[0]?.title || 'Sin_titulo').replace(/[\s¿?¡!;:]/g, '_'),
-              url: ev.pages[0]?.content_urls?.desktop?.page || ''
-            }));
-            core.setOutput("events", JSON.stringify(events));
-
-  process-events:
-    needs: fetch-events
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        event: ${{ fromJson(needs.fetch-events.outputs.events) }}
-    steps:
-      - name: Preparar nombre del PDF
-        id: prepare
-        run: |
-          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
-
-      - name: Descargar HTML de la URL
-        run: |
-          curl -sL "${{ matrix.event.url }}" -o page.html
-
-      - name: Convertir HTML a PDF
-        continue-on-error: true
-        uses: fifsky/html-to-pdf-action@v0.1.0
-        with:
-          htmlFile: page.html
-          outputFile: output.pdf
-
-      - name: Subir artefacto PDF
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}
-          path: output.pdf
-          retention-days: 1
+    fetch-events:
+      runs-on: ubuntu-latest
+      outputs:
+        events: ${{ steps.extract-events.outputs.events }}
+      steps:
+        - name: Setear variables mes y día
+          run: |
+            echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
+            echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
+  
+        - name: Restaurar cache API
+          id: cache-api
+          uses: actions/cache@v4
+          with:
+            path: response.json
+            key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
+  
+        - name: Consumir API si no hay cache
+          if: steps.cache-api.outputs.cache-hit != 'true'
+          run: |
+            curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${LANG}/onthisday/selected/${MONTH}/${DAY}" \
+              -H "User-Agent: github-actions" > response.json
+  
+        - name: Extraer eventos del API
+          id: extract-events
+          uses: actions/github-script@v7
+          with:
+            script: |
+              const fs = require('fs');
+              const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+              const events = (data.selected || []).map(ev => ({
+                title: (ev.pages[0]?.title || 'Sin_titulo')
+                          .replace(/[\s¿?¡!;:]/g, '_')
+                          .replace(/[áàäâ]/gi,'a')
+                          .replace(/[éèëê]/gi,'e')
+                          .replace(/[íìïî]/gi,'i')
+                          .replace(/[óòöô]/gi,'o')
+                          .replace(/[úùüû]/gi,'u'),
+                url: ev.pages[0]?.content_urls?.desktop?.page || ''
+              }));
+              core.setOutput("events", JSON.stringify(events));
+  
+    process-events:
+      needs: fetch-events
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          event: ${{ fromJson(needs.fetch-events.outputs.events) }}
+      steps:
+        - name: Preparar nombre del PDF
+          run: |
+            echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
+  
+        - name: Instalar Puppeteer
+          run: |
+            npm init -y
+            npm install puppeteer
+  
+        - name: Convertir URL a PDF con Puppeteer
+          continue-on-error: true
+          uses: actions/github-script@v7
+          with:
+            script: |
+              const puppeteer = require('puppeteer');
+              const fs = require('fs');
+  
+              (async () => {
+                const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+                const page = await browser.newPage();
+                await page.goto("${{ matrix.event.url }}", { waitUntil: 'networkidle2' });
+                await page.pdf({ path: process.env.PDF_NAME, format: "A4" });
+                await browser.close();
+                console.log("PDF generado:", process.env.PDF_NAME);
+              })();
+  
+        - name: Subir artefacto PDF
+          uses: actions/upload-artifact@v4
+          with:
+            name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}
+            path: ${{ env.PDF_NAME }}
+            retention-days: 1
