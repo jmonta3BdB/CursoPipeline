@@ -13,7 +13,7 @@ on:
         type: string
 
 env:
-  LANG: ${{ vars.LANG }} # Variable de entorno definida en el repositorio
+  LANG: ${{ vars.LANG }}
 
 jobs:
   fetch-events:
@@ -21,7 +21,7 @@ jobs:
     outputs:
       events: ${{ steps.extract-events.outputs.events }}
     steps:
-      - name: Configurar variables
+      - name: Setear variables mes y día
         run: |
           echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
           echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
@@ -33,21 +33,21 @@ jobs:
           path: response.json
           key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
 
-      - name: Llamar API si no hay cache
+      - name: Consumir API si no hay cache
         if: steps.cache-api.outputs.cache-hit != 'true'
         run: |
           curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${LANG}/onthisday/selected/${MONTH}/${DAY}" \
-          -H "User-Agent: github-actions" > response.json
+            -H "User-Agent: github-actions" > response.json
 
-      - name: Extraer eventos
+      - name: Extraer eventos del API
         id: extract-events
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
-            const events = data.selected.map(ev => ({
-              title: ev.pages[0]?.title || 'Sin_titulo',
+            const events = (data.selected || []).map(ev => ({
+              title: (ev.pages[0]?.title || 'Sin_titulo').replace(/[\s¿?¡!;:]/g, '_'),
               url: ev.pages[0]?.content_urls?.desktop?.page || ''
             }));
             core.setOutput("events", JSON.stringify(events));
@@ -60,17 +60,20 @@ jobs:
       matrix:
         event: ${{ fromJson(needs.fetch-events.outputs.events) }}
     steps:
-      - name: Preparar nombre del archivo
+      - name: Preparar nombre del PDF
         id: prepare
         run: |
-          safe_title=$(echo "${{ matrix.event.title }}" | tr ' ' '_' | tr -d '¿?¡!;:')
-          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${safe_title}.pdf" >> $GITHUB_ENV
+          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
+
+      - name: Descargar HTML de la URL
+        run: |
+          curl -sL "${{ matrix.event.url }}" -o page.html
 
       - name: Convertir HTML a PDF
         continue-on-error: true
-        uses: jasongitmail/html-to-pdf-action@v1
+        uses: fifsky/html-to-pdf-action@v0.1.0
         with:
-          htmlUrl: ${{ matrix.event.url }}
+          htmlFile: page.html
           outputFile: output.pdf
 
       - name: Subir artefacto PDF
