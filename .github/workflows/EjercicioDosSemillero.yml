@@ -1,0 +1,81 @@
+name: Exportación de PDF
+
+on:
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Mes en formato MM"
+        required: true
+        type: string
+      day:
+        description: "Día en formato DD"
+        required: true
+        type: string
+
+env:
+  LANG: ${{ vars.LANG }} # Variable de entorno definida en el repositorio
+
+jobs:
+  fetch-events:
+    runs-on: ubuntu-latest
+    outputs:
+      events: ${{ steps.extract-events.outputs.events }}
+    steps:
+      - name: Configurar variables
+        run: |
+          echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
+          echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
+
+      - name: Restaurar cache API
+        id: cache-api
+        uses: actions/cache@v4
+        with:
+          path: response.json
+          key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
+
+      - name: Llamar API si no hay cache
+        if: steps.cache-api.outputs.cache-hit != 'true'
+        run: |
+          curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${LANG}/onthisday/selected/${MONTH}/${DAY}" \
+          -H "User-Agent: github-actions" > response.json
+
+      - name: Extraer eventos
+        id: extract-events
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+            const events = data.selected.map(ev => ({
+              title: ev.pages[0]?.title || 'Sin_titulo',
+              url: ev.pages[0]?.content_urls?.desktop?.page || ''
+            }));
+            core.setOutput("events", JSON.stringify(events));
+
+  process-events:
+    needs: fetch-events
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        event: ${{ fromJson(needs.fetch-events.outputs.events) }}
+    steps:
+      - name: Preparar nombre del archivo
+        id: prepare
+        run: |
+          safe_title=$(echo "${{ matrix.event.title }}" | tr ' ' '_' | tr -d '¿?¡!;:')
+          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${safe_title}.pdf" >> $GITHUB_ENV
+
+      - name: Convertir HTML a PDF
+        continue-on-error: true
+        uses: jasongitmail/html-to-pdf-action@v1
+        with:
+          htmlUrl: ${{ matrix.event.url }}
+          outputFile: output.pdf
+
+      - name: Subir artefacto PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}
+          path: output.pdf
+          retention-days: 1
