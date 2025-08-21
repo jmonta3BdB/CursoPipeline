@@ -1,4 +1,4 @@
-name: Exportación de PDF
+name: Exportación de HTML a PDF
 
 on:
   workflow_dispatch:
