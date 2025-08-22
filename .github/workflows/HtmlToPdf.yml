@@ -23,8 +23,8 @@ jobs:
     steps:
       - name: Setear variables mes y día
         run: |
-          echo "MONTH=${{ github.event.inputs.month }}" >> $GITHUB_ENV
-          echo "DAY=${{ github.event.inputs.day }}" >> $GITHUB_ENV
+          echo "MONTH=${{ inputs.month }}" >> $GITHUB_ENV
+          echo "DAY=${{ inputs.day }}" >> $GITHUB_ENV
 
       - name: Restaurar cache API
         id: cache-api
@@ -81,6 +81,6 @@ jobs:
       - name: Subir artefacto PDF
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}
+          name: ${{ inputs.month }}-${{ inputs.day }}-${{ matrix.event.title }}
           path: ${{ env.PDF_NAME }}
           retention-days: 1
