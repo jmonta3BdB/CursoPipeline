@@ -1,0 +1,27 @@
+name: Ejercicio Workflow
+
+#Se ejecute cuando se haga un pull request sobre una rama feature/
+#Sobre la versión de ubuntu más reciente
+#Un step en bash que sume 2 números y muestre el resultado
+#Que se ejecute los jueves a las 9:35 hora Colombia
+
+on:
+  pull_request:
+    branches:
+      - 'feature/**'
+  schedule:
+    - cron: '35 14 * * 4'
+
+jobs:
+  sumar-numeros:
+    name: Sumar dos números
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Suma
+        shell: bash
+        run: |
+          NUM1=2
+          NUM2=3
+          RESULT=$((NUM1 + NUM2))
+          echo "La suma de $NUM1 + $NUM2 es $RESULT"
