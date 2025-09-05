@@ -1,0 +1,2 @@
+usuarios: [{nombre: 'Pedro', credenciales: {usuario: "Pedro123", clave: "123admin"}}, {nombre: 'Laura', credenciales: {usuario: "Lau123", clave: "L123"}}]
+usuarios: [ { "nombre": "Pedro", "credenciales": { "usuario": "Pedro123", "clave": "123admin" } } , { "nombre": "Laura", "credenciales": { "usuario": "Lau123", "clave": "L123" }} ]

@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Preparar nombre del PDF
         run: |
-          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
+          echo "PDF_NAME=${{ github.event.inputs.month }}-${{ inputs.day }}-${{ matrix.event.title }}.pdf" >> $GITHUB_ENV
 
       - name: Convertir URL a PDF con WebToPDF Action
         uses: misaelnieto/web_to_pdf_action@master
