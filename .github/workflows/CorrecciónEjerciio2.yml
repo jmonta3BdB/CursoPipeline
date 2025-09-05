@@ -1,0 +1,109 @@
+name: Exportación de HTML a PDF
+
+on:
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: "Mes en formato MM"
+        required: true
+        type: choice
+        options:
+          - "01"
+          - "02"
+          - "03"
+          - "04"
+          - "05"
+          - "06"
+          - "07"
+          - "08"
+          - "09"
+          - "10"
+          - "11"
+          - "12"
+      dia:
+        description: "Día en formato DD"
+        required: true
+        type: choice
+        options:
+          - "01"
+          - "02"
+          - "03"
+          - "04"
+          - "05"
+          - "06"
+          - "07"
+          - "08"
+          - "09"
+          - "10"
+          - "11"
+          - "12"
+          - "13"
+          - "14"
+          - "15"
+          - "16"
+          - "17"
+          - "18"
+          - "19"
+          - "20"
+          - "21"
+          - "22"
+          - "23"
+          - "24"
+          - "25"
+          - "26"
+          - "27"
+          - "28"
+          - "29"
+          - "30"
+          - "31"
+
+
+jobs: 
+  consumir-api:
+    name: conusmo del api de eventos
+    runs-on: ubuntu-latest
+    outputs:
+      eventos: ${{ steps.paralelos.outputs.eventos}}
+    env:
+      DIA: ${{ inputs.dia}}
+      MES: ${{ inputs.mes}}
+      LANG: ${{ vars.LANG}}
+    steps: 
+      - name: Buscar y traer respuesta del cache
+        uses: actions/cache@v4
+        with:
+          path: eventos.json'
+          key: api-${{ env.LANG }}-${{ env.MONTH }}-${{ env.DAY }}
+      - name: consumir el api
+        if: steps.cache-api.outputs.cache-hit != 'true'
+        run: |
+          RESPONSE=$(curl -s "https://api.wikimedia.org/feed/v1/wikipedia/${{env.LANG}}}/onthisday/selected/${{env.MES}}/${{env.DIA}}")
+          echo "$RESPONSE" | jq '.selected[]' | > eventos.json
+      - name: prepara elementos para los parelelos
+        id: paralelos
+        run: |
+          echo "eventos=$(jq '.' eventos.json)" >> $GITHUB_OUTPUT
+  
+  exportar-pdf:
+    name: tomar el primerl elemento html y exportar a pdf
+    runs-on: ubuntu-lastest
+    needs: consumir-api
+    strategy:
+      matrix: ${{ needs.consumir-api.outputs.eventos}}
+    steps:
+      - name: Obtener url del arreglo
+        run : |
+          URL="${{ matrix.pages[0].content_urls.desktop.page }}"
+          TITLE="${{ matrix.page[0].title }}"
+          echo "TITLE=$TITLE" >> GITHUB_ENV
+          echo "URL=$URL" >> GITHUB_ENV
+      - name: html to pdf
+        uses: misaelnieto/web_to_pdf_action@master
+        with:
+          webPageURL: ${{ env.URL }}
+          outputFile: ${{ env.MES}}-${{ env.DIA}}-${{ env.TITLE}}.pdf
+      - name: Exportar pdf como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.MES}}-${{ env.DIA}}-${{ env.TITLE}}
+          path: ${{ env.MES}}-${{ env.DIA}}-${{ env.TITLE}}.pdf
